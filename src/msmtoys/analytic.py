@@ -1,27 +1,30 @@
 """Calculate a pseudo-analytic transition matrix for a potential."""
 
-import numpy as np
 from msmtoys import plotting
-from matplotlib import pyplot as pp
-import scipy.sparse
+from scipy.sparse import csr, coo
+import numpy as np
 
 EPSILON = 1.0e-10
 
 def _state_id(x, y, shape):
+    """Take a row, column description into a state id."""
     return shape[1] * y + x
 
 def _rowcol(state_id, shape):
+    """Translate a state id into a row, column."""
     x = state_id % shape[1]
     y = (state_id - x) // shape[1]
     return x, y
 
 def _xy(state_id, grid):
+    """Translate a state id into x, y coordinates."""
     row, col = _rowcol(state_id, grid.shape)
     x = grid[0, row, 0]
     y = grid[1, 0, col]
     return x, y
 
 def _neighbors():
+    """Get an array of x,y offsets to index nearest neighbors."""
     neighbors = np.zeros((0, 2), dtype='int')
     for row_i in xrange(-1, 2):
         for col_i in xrange(-1, 2):
@@ -32,7 +35,10 @@ def _neighbors():
 
 
 def calculate_transition_matrix(potential, resolution, beta, bounds=None):
-    grid, grid_width = plotting._get_grid(potential, bounds, resolution)
+    """Calculate a transition matrix from a potential."""
+    if bounds is None:
+        bounds = potential.bounds
+    grid = plotting.get_grid(bounds, resolution)
 
     n_states = grid.shape[1] * grid.shape[2]
 
@@ -54,7 +60,8 @@ def calculate_transition_matrix(potential, resolution, beta, bounds=None):
             for neighs in neighbors:
                 nrow_i = row_i + neighs[0]
                 ncol_i = col_i + neighs[1]
-                if nrow_i < 0 or nrow_i >= grid.shape[1] or ncol_i < 0 or ncol_i >= grid.shape[2]:
+                if (nrow_i < 0 or nrow_i >= grid.shape[1]
+                    or ncol_i < 0 or ncol_i >= grid.shape[2]):
                     # Transition probability to states outside our state space
                     # is zero. This is not in the transition matrix
                     pass
@@ -72,7 +79,8 @@ def calculate_transition_matrix(potential, resolution, beta, bounds=None):
 
 
 
-    t_matrix = scipy.sparse.coo_matrix((t_matrix_data, (t_matrix_rows, t_matrix_cols)), shape=(n_states, n_states)).tocsr()
+    t_matrix = coo.coo_matrix((t_matrix_data, (t_matrix_rows, t_matrix_cols)),
+                              shape=(n_states, n_states)).tocsr()
 
     # Normalize
     for trow_i in xrange(n_states):
@@ -80,27 +88,35 @@ def calculate_transition_matrix(potential, resolution, beta, bounds=None):
         rto = t_matrix.indptr[trow_i + 1]
         normalization = np.sum(t_matrix.data[rfrom:rto])
         if normalization < EPSILON:
-            print("No transitions %d %d" % (row_i, col_i))
+            print("No transitions from %d" % (trow_i))
         else:
             t_matrix.data[rfrom:rto] = t_matrix.data[rfrom:rto] / normalization
 
     return t_matrix, grid
 
 def propogate_t_matrix(pi, t_matrix, n_steps):
+    """Apply a transition matrix n_steps times.
+
+    pi - initial state vector.
+    """
     normalize = np.sum(pi)
     if np.abs(normalize - 1.0) > EPSILON:
         print("Warning: initial state is not normalized")
         print("Performing normalization")
-        v = pi / normalize
+        vec = pi / normalize
     else:
-        v = pi
+        vec = pi
 
     for _ in xrange(n_steps):
-        v = np.dot(v, t_matrix)
+        vec = np.dot(vec, t_matrix)
 
-    return v
+    return vec
 
 def _sample(weights, indices=None):
+    """Get the next state from weights
+
+    indices - if using a sparse matrix, pass the indices.
+    """
     cum_weights = np.cumsum(weights)
     result = np.sum(cum_weights < np.random.rand())
     if indices is not None:
@@ -110,18 +126,20 @@ def _sample(weights, indices=None):
 
 
 def get_traj(t_matrix, length, grid, stride=1, initial_id=None):
+    """Sample a trajectory from the transition matrix."""
     if initial_id is None:
         initial_id = np.random.randint(t_matrix.shape[0])
 
     state_id = initial_id
     xy = np.zeros((0, 2))
 
-    if isinstance(t_matrix, scipy.sparse.csr_matrix):
+    if isinstance(t_matrix, csr.csr_matrix):
         stride_trigger = stride
         for _ in xrange(length):
             rfrom = t_matrix.indptr[state_id]
             rto = t_matrix.indptr[state_id + 1]
-            state_id = _sample(t_matrix.data[rfrom:rto], t_matrix.indices[rfrom:rto])
+            state_id = _sample(t_matrix.data[rfrom:rto],
+                               t_matrix.indices[rfrom:rto])
 
             if stride_trigger == stride:
                 xy = np.append(xy, [_xy(state_id, grid)], axis=0)
@@ -131,20 +149,14 @@ def get_traj(t_matrix, length, grid, stride=1, initial_id=None):
 
     return xy
 
-def plot_vector(vec, grid, scale=1.0):
-    """Plot the centroids of a particular clustering scheme.
+def get_trajlist(t_matrix, grid, num_trajs, traj_len, stride):
+    """Get a list of trajectories."""
+    traj_list = list()
+    for _ in xrange(num_trajs):
+        traj = get_traj(t_matrix, length=traj_len, grid=grid, stride=stride)
+        traj_list.append(traj)
 
-    If marker_sizes is given, it will use this array as the sizes for the
-    various centroids. This is useful for visualizing eigenvectors.
-    """
+    return traj_list
 
-    for i in xrange(len(vec)):
-        marker_size = np.abs(vec[i])
-        if vec[i] < 0:
-            color_string = 'ro'
-        else:
-            color_string = 'wo'
 
-        x, y = _xy(i, grid)
-        pp.plot(x, y, color_string, markersize=12 * scale * marker_size, zorder=10)
 
