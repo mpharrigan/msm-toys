@@ -131,29 +131,38 @@ def get_traj(t_matrix, length, grid, stride=1, initial_id=None):
         initial_id = np.random.randint(t_matrix.shape[0])
 
     state_id = initial_id
-    xy = np.zeros((0, 2))
+    xy = np.zeros((length / stride, 2))
 
     if isinstance(t_matrix, csr.csr_matrix):
         stride_trigger = stride
-        for _ in xrange(length):
+        for i in xrange(length):
             rfrom = t_matrix.indptr[state_id]
             rto = t_matrix.indptr[state_id + 1]
             state_id = _sample(t_matrix.data[rfrom:rto],
                                t_matrix.indices[rfrom:rto])
 
             if stride_trigger == stride:
-                xy = np.append(xy, [_xy(state_id, grid)], axis=0)
+                # xy = np.append(xy, [_xy(state_id, grid)], axis=0)
+                xy[i / stride] = _xy(state_id, grid)
                 stride_trigger = 0
 
             stride_trigger += 1
-
     return xy
 
-def get_trajlist(t_matrix, grid, num_trajs, traj_len, stride):
+def get_trajlist(t_matrix, grid, num_trajs, traj_len, stride, random_seed=None):
     """Get a list of trajectories."""
+
+    if random_seed is not None:
+        np.random.seed(random_seed)
+        initial_ids = np.random.random_integers(t_matrix.shape[0],
+                                                size=num_trajs)
+    else:
+        initial_ids = [None for i in xrange(num_trajs)]
+
     traj_list = list()
-    for _ in xrange(num_trajs):
-        traj = get_traj(t_matrix, length=traj_len, grid=grid, stride=stride)
+    for i in xrange(num_trajs):
+        traj = get_traj(t_matrix, length=traj_len, grid=grid, stride=stride,
+                        initial_id=initial_ids[i])
         traj_list.append(traj)
 
     return traj_list
