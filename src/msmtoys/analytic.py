@@ -3,6 +3,7 @@
 from msmtoys import plotting
 from scipy.sparse import csr, coo
 import numpy as np
+import mdtraj
 
 EPSILON = 1.0e-10
 
