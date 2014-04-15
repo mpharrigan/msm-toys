@@ -29,3 +29,6 @@ nosetests.xml
 # Translations
 *.mo
 
+.project
+.pydevproject
+
