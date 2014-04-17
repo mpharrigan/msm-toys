@@ -9,23 +9,28 @@ take the meaning of those numbers with a grain of salt.
 import numpy as np
 from msmtoys import analytic
 
+
+#TODO: Move this class into the new framework
+
 class MullerPotential:
     def __init__(self):
         self.tmatrix = None
         self.grid = None
 
     def calculate_transition_matrix(self, resolution, beta):
-        self.tmatrix, self.grid = analytic.calculate_transition_matrix(MullerForce, resolution, beta)
+        self.tmatrix, self.grid = analytic.calculate_transition_matrix(
+            MullerForce, resolution, beta)
 
     def load_transition_matrix(self, tmatrix_fn):
         import pickle
+
         with open(tmatrix_fn) as tmatrix_f:
             self.tmatrix, self.grid = pickle.load(tmatrix_f)
 
     def sample(self, n_trajs, traj_len, stride):
         assert self.tmatrix is not None, 'Please calculate or load a transition matrix first'
-        return analytic.get_trajlist(self.tmatrix, self.grid, n_trajs, traj_len, stride, random_seed=None)
-
+        return analytic.get_trajlist(self.tmatrix, self.grid, n_trajs, traj_len,
+                                     stride, random_seed=None)
 
 
 class MullerForce:
@@ -53,7 +58,7 @@ class MullerForce:
 
         # Include scaling expression
         expression = ("{strength}*(".format(strength=self.strength) +
-                                    expression + ")")
+                      expression + ")")
 
 
     @classmethod
@@ -62,8 +67,9 @@ class MullerForce:
         value = np.zeros_like(x)
         for j in range(4):
             value += cls.AA[j] * np.exp(cls.aa[j] * (x - cls.XX[j]) ** 2 + \
-                cls.bb[j] * (x - cls.XX[j]) * (y - cls.YY[j]) + \
-                cls.cc[j] * (y - cls.YY[j]) ** 2)
+                                        cls.bb[j] * (x - cls.XX[j]) * (
+                                        y - cls.YY[j]) + \
+                                        cls.cc[j] * (y - cls.YY[j]) ** 2)
         return value
 
     # xmin, xmax, ymin, ymax

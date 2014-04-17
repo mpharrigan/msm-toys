@@ -10,6 +10,7 @@ class FourStateTmat(bc.TransitionSystem):
     """Set up a system with n=4 states
 
     """
+
     def __init__(self):
         super(FourStateTmat, self).__init__()
 
@@ -37,9 +38,9 @@ class EightStateTmat(FourStateTmat):
     :param link_prob_f: the off diagonal conectybits
     :param link_prob_b:
     """
+
     def __init__(self, link_prob_f, link_prob_b):
         super(EightStateTmat, self).__init__()
-
 
         n = self.n_states * 2
 
@@ -52,7 +53,6 @@ class EightStateTmat(FourStateTmat):
         # Turn it into a 2d matrix
         double_counts = np.swapaxes(double_counts, 1, 2)
         double_counts = np.reshape(double_counts, (n, n))
-
 
         double_counts = scipy.sparse.csr_matrix(double_counts, dtype=np.int)
         rev_counts, tmat, populations, mapping = msml.build_msm(

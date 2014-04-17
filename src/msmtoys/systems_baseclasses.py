@@ -41,7 +41,6 @@ class TransitionSystem(ToySystem):
                     log.info("Using dense sampling")
                     self.step_func = self.step_dense
 
-
         return self.step_func
 
     def sample(self, init_state, n_steps):
@@ -56,7 +55,7 @@ class TransitionSystem(ToySystem):
         states = np.zeros(n_steps, dtype=int)
         states[0] = init_state
         for i in range(1, n_steps):
-            states[i] = self.step(states[i-1])
+            states[i] = self.step(states[i - 1])
         return states
 
     def step_sparse(self, state_i):
@@ -85,7 +84,6 @@ class TransitionSystem(ToySystem):
         """
 
         t_matrix = self.tmat
-
 
         probs = t_matrix[state_i, :]
         log.debug(np.cumsum(probs))
