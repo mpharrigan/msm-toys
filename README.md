@@ -1,8 +1,12 @@
 MSM Toys
 ========
 
-Various toy models for testing MSMs.
+Various toy models for testing MSMs:
 
-Right now it's just the muller potential. We can calculate analytical
-transition matrices from the 2d potential and generate markovian trajectories
-to test
+- Build a transition matrix from a continuous 2d potential
+    - The Muller potential is included
+    - The Muller potential can also be used as a custom external force
+      in OpenMM
+- Simple few-state hand-built Markov chains    
+
+We can then sample "trajectories" from these models.

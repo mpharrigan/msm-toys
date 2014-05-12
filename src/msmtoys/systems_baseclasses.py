@@ -15,7 +15,14 @@ class ToySystem(object):
     pass
 
 
+class PotentialSystem(ToySystem):
+    """A system defined by its potential energy surface."""
+    pass
+
+
 class TransitionSystem(ToySystem):
+    """Any system that directly samples based on transition probabilities."""
+
     def __init__(self):
         self.tmat = None
         self.step_func = None
