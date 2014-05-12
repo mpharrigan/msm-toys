@@ -1,5 +1,9 @@
 """Calculate a pseudo-analytic transition matrix for a potential."""
 
+#TODO: This module is deprecated. Do not use. If you see this code used
+#TODO: somewhere, try to replace it.
+
+
 from msmtoys import plotting
 from scipy.sparse import csr, coo
 import numpy as np
@@ -7,9 +11,11 @@ import mdtraj
 
 EPSILON = 1.0e-10
 
+
 def _state_id(x, y, shape):
     """Take a row, column description into a state id."""
     return shape[1] * y + x
+
 
 def _rowcol(state_id, shape):
     """Translate a state id into a row, column."""
@@ -17,12 +23,14 @@ def _rowcol(state_id, shape):
     y = (state_id - x) // shape[1]
     return x, y
 
+
 def _xy(state_id, grid):
     """Translate a state id into x, y coordinates."""
     row, col = _rowcol(state_id, grid.shape)
     x = grid[0, row, 0]
     y = grid[1, 0, col]
     return x, y
+
 
 def _neighbors():
     """Get an array of x,y offsets to index nearest neighbors."""
@@ -78,8 +86,6 @@ def calculate_transition_matrix(potential, resolution, beta, bounds=None):
 
                     normalization += t_prob
 
-
-
     t_matrix = coo.coo_matrix((t_matrix_data, (t_matrix_rows, t_matrix_cols)),
                               shape=(n_states, n_states)).tocsr()
 
@@ -94,6 +100,7 @@ def calculate_transition_matrix(potential, resolution, beta, bounds=None):
             t_matrix.data[rfrom:rto] = t_matrix.data[rfrom:rto] / normalization
 
     return t_matrix, grid
+
 
 def propogate_t_matrix(pi, t_matrix, n_steps):
     """Apply a transition matrix n_steps times.
@@ -112,6 +119,7 @@ def propogate_t_matrix(pi, t_matrix, n_steps):
         vec = np.dot(vec, t_matrix)
 
     return vec
+
 
 def _sample(weights, indices=None):
     """Get the next state from weights
@@ -149,6 +157,7 @@ def get_traj(t_matrix, length, grid, stride=1, initial_id=None):
 
             stride_trigger += 1
     return xy
+
 
 def get_trajlist(t_matrix, grid, num_trajs, traj_len, stride, random_seed=None):
     """Get a list of trajectories."""

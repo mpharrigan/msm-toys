@@ -19,10 +19,11 @@ def get_grid(bounds, resolution):
     maxy = bounds[3]
     grid_width = max(maxx - minx, maxy - miny) / resolution
 
-    grid = np.mgrid[minx : maxx : grid_width, miny : maxy : grid_width]
+    grid = np.mgrid[minx: maxx: grid_width, miny: maxy: grid_width]
     return grid
 
-def plot2d(potential, ax=None, bounds=None, resolution=200, ** kwargs):
+
+def plot2d(potential, ax=None, bounds=None, resolution=200, **kwargs):
     """Plot a countour plot of a 2d potential.
 
     potential - the class with a .potential() method
@@ -45,6 +46,7 @@ def plot2d(potential, ax=None, bounds=None, resolution=200, ** kwargs):
         ax = pp
 
     ax.contourf(grid[0], grid[1], potential.clip(max=200), 40, **kwargs)
+
 
 def plot2d_vector(vec, translate_func, scale=1.0):
     """Plot the centroids of a particular clustering scheme.
