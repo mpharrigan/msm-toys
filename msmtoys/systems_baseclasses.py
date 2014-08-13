@@ -130,7 +130,7 @@ class TransitionSystem(ToySystem):
 
     def print_mat(self, matname):
         for line in self.format_mat(matname):
-            print line
+            print(line)
 
 
 
